@@ -2,7 +2,9 @@
 
 ## 1. Project Description
 
-The Community Q&A Platform is a RESTful API that allows users to ask questions, provide answers, vote on questions and answers, and organize questions into categories. It includes authentication, email verification, password reset, role-based access control, and administrative features.
+The Community Q&A Platform is a RESTful API built with Node.js and Express.js. It allows users to ask questions, provide answers, vote on questions and answers, and organize questions into categories.
+
+The platform includes user authentication, email verification, password reset, role-based authorization, input validation, administrative functionality, and centralized error handling.
 
 ## 2. Technologies Used
 
@@ -15,11 +17,15 @@ The Community Q&A Platform is a RESTful API that allows users to ask questions, 
 - express-validator
 - Nodemailer
 - dotenv
+- Postman for API testing
+- phpMyAdmin for database management
 
 ## 3. Project Structure
 
 ```text
 Final Project/
+├── database/
+│   └── schema.sql
 ├── src/
 │   ├── configs/
 │   │   └── db.js
@@ -51,58 +57,88 @@ Final Project/
 └── README.md
 ```
 
-## 4. Installation
+## 4. Installation and Setup
 
-Ensure Node.js and MySQL or MariaDB are installed.
+### Prerequisites
 
-1. Open a terminal in the project directory.
-2. Install the dependencies:
+Ensure that the following are installed:
+
+- Node.js
+- MySQL or MariaDB
+- XAMPP or another compatible database management environment
+- Postman for testing API endpoints
+
+### Installation Steps
+
+1. Clone or download the project repository from GitHub.
+2. Open the project folder in Visual Studio Code.
+3. Open the terminal in the project directory.
+4. Install the required dependencies:
 
    ```bash
    npm install
    ```
 
-3. Create a database named `community_qa` in MySQL or phpMyAdmin.
-4. Create the required database tables and relationships.
-5. Configure the environment variables in the `.env` file.
-6. Start the server:
+5. Start MySQL or MariaDB using XAMPP or your preferred database environment.
+6. Open phpMyAdmin in your browser.
+7. Import `database/schema.sql` to create the `community_qa` database and its tables. If importing through phpMyAdmin, select the Import tab and choose the schema file.
+8. Create a `.env` file in the project root and configure the environment variables described in Section 5.
+9. Start the API server:
 
    ```bash
    node src/app.js
    ```
 
-The API uses port `3000` by default if configured in the environment.
+10. Use Postman to test the API at:
+
+    `http://localhost:3000`
+
+The server uses the port configured in the environment variables. Ensure that the configured port matches the URL used for testing.
 
 ## 5. Environment Variables
 
-Create a `.env` file in the project root with the following variables:
+Create a `.env` file in the root directory of the project. The following is an example configuration:
 
 ```env
 PORT=3000
+
 DB_HOST=localhost
 DB_USER=root
 DB_PASSWORD=
 DB_NAME=community_qa
 DB_PORT=3306
-JWT_SECRET=MY_private_jwt_secret
+
+JWT_SECRET=replace_with_a_strong_secret
 JWT_EXPIRES_IN=1d
+
 EMAIL_USER=your_email_address
-EMAIL_APP_PASSWORD=MY_email_app_password
+EMAIL_APP_PASSWORD=your_email_app_password
 ```
 
+**Important:** The values above are examples. Use the environment variable names expected by your application's configuration files. Do not overwrite working settings without checking them first.
 
+Keep your actual `.env` file private. Never commit email app passwords, JWT secrets, or other credentials to a public repository.
 
 ## 6. Authentication and Authorization
 
-The API uses JSON Web Tokens (JWT) to authenticate users and bcrypt to hash passwords.
+The API uses JSON Web Tokens (JWT) for authentication and bcrypt for password hashing.
 
-- Users must register and verify their email addresses.
-- Registered users can log in to receive an authentication token.
-- Protected endpoints require a valid Bearer token.
-- Users can request a password reset through email.
-- Logout invalidates the current token on the server.
-- The `USER` role provides standard platform access.
-- The `ADMIN` role provides access to administrative endpoints.
+Authentication and account features include:
+
+- User registration.
+- Email verification.
+- User login and JWT generation.
+- Forgot-password requests.
+- Password reset.
+- Logout with server-side token revocation.
+
+Authorization features include:
+
+- The `USER` role for standard platform operations.
+- The `ADMIN` role for administrative operations.
+- Middleware that checks authentication and role permissions before granting access to protected routes.
+
+Protected endpoints require an appropriate authentication token.
 
 Example authorization header:
 
@@ -110,39 +146,45 @@ Example authorization header:
 Authorization: Bearer YOUR_JWT_TOKEN
 ```
 
+Replace `YOUR_JWT_TOKEN` with a valid token obtained from the login endpoint.
+
 ## 7. API Endpoints
 
-### Authentication
+All endpoints use the base URL:
+
+`http://localhost:3000`
+
+### 7.1 Authentication
 
 | Method | Endpoint | Purpose |
 |---|---|---|
-| POST | `/api/auth/register` | Register a user |
-| POST | `/api/auth/login` | Log in |
-| GET | `/api/auth/verify-email/:token` | Verify email |
-| POST | `/api/auth/forgot-password` | Request password reset |
-| POST | `/api/auth/reset-password` | Reset password |
-| POST | `/api/auth/logout` | Log out and invalidate token |
+| POST | `/api/auth/register` | Register a new user |
+| POST | `/api/auth/login` | Log in and obtain a JWT |
+| GET | `/api/auth/verify-email/:token` | Verify an email address |
+| POST | `/api/auth/forgot-password` | Request a password reset |
+| POST | `/api/auth/reset-password` | Reset a password |
+| POST | `/api/auth/logout` | Log out and revoke the current token |
 
-### Questions
+### 7.2 Questions
 
 | Method | Endpoint | Purpose |
 |---|---|---|
 | POST | `/api/questions` | Create a question |
-| GET | `/api/questions` | List questions |
-| GET | `/api/questions/:id` | Get a question |
+| GET | `/api/questions` | Retrieve questions |
+| GET | `/api/questions/:id` | Retrieve a specific question |
 | PATCH | `/api/questions/:id` | Update a question |
 | DELETE | `/api/questions/:id` | Soft-delete a question |
 
-### Answers
+### 7.3 Answers
 
 | Method | Endpoint | Purpose |
 |---|---|---|
-| POST | `/api/questions/:id/answers` | Add an answer |
-| GET | `/api/questions/:id/answers` | List answers |
+| POST | `/api/questions/:id/answers` | Add an answer to a question |
+| GET | `/api/questions/:id/answers` | Retrieve answers for a question |
 | PATCH | `/api/answers/:id` | Update an answer |
 | DELETE | `/api/answers/:id` | Soft-delete an answer |
 
-### Votes
+### 7.4 Votes
 
 | Method | Endpoint | Purpose |
 |---|---|---|
@@ -151,15 +193,20 @@ Authorization: Bearer YOUR_JWT_TOKEN
 | POST | `/api/answers/:id/vote` | Vote on an answer |
 | DELETE | `/api/answers/:id/vote` | Remove an answer vote |
 
-### Categories
+Vote types are `up` and `down`. The API implements database constraints to help prevent duplicate votes.
+
+### 7.5 Categories
 
 | Method | Endpoint | Purpose |
 |---|---|---|
-| GET | `/api/categories` | List active categories |
+| GET | `/api/categories` | Retrieve active categories |
+| POST | `/api/admin/categories` | Create a category (admin only) |
+| PATCH | `/api/admin/categories/:id` | Update a category (admin only) |
+| DELETE | `/api/admin/categories/:id` | Deactivate a category (admin only) |
 
-### Administration
+### 7.6 Administration
 
-All administrative endpoints require an authenticated user with the `ADMIN` role.
+Administrative endpoints require authentication and the `ADMIN` role.
 
 | Method | Endpoint | Purpose |
 |---|---|---|
@@ -167,67 +214,121 @@ All administrative endpoints require an authenticated user with the `ADMIN` role
 | PATCH | `/api/admin/users/:id/role` | Change a user's role |
 | DELETE | `/api/admin/users/:id` | Deactivate a user |
 | PATCH | `/api/admin/users/:id/reactivate` | Reactivate a user |
-| DELETE | `/api/admin/questions/:id` | Admin question deletion |
-| DELETE | `/api/admin/answers/:id` | Admin answer deletion |
-| POST | `/api/admin/categories` | Create a category |
-| PATCH | `/api/admin/categories/:id` | Update a category |
-| DELETE | `/api/admin/categories/:id` | Deactivate a category |
+| DELETE | `/api/admin/questions/:id` | Delete a question through administration |
+| DELETE | `/api/admin/answers/:id` | Delete an answer through administration |
 
-## 8. Validation and Error Handling
+## 8. Database Design
 
-The API uses `express-validator` to validate request data.
+The application uses a relational database named `community_qa`.
 
-Examples of validation requirements:
+The database contains six tables:
 
-- Question titles must contain 10–150 characters.
-- Question content must contain 20–5000 characters.
-- Answer content must contain 10–2000 characters.
+| Table | Purpose |
+|---|---|
+| `users` | Stores user accounts, credentials, roles, and account status |
+| `categories` | Stores question categories |
+| `questions` | Stores questions and their category and author relationships |
+| `answers` | Stores answers associated with questions and users |
+| `votes` | Stores votes on questions and answers |
+| `revoked_tokens` | Stores revoked authentication tokens |
+
+Foreign keys establish relationships between related records and help maintain referential integrity.
+
+The schema file is located at `database/schema.sql`. It contains the table definitions and relationships needed to recreate the database structure. It does not contain the existing application's test records.
+
+## 9. Validation and Error Handling
+
+The API uses `express-validator` to validate incoming request data.
+
+Examples of validation requirements include:
+
+- Question titles must contain between 10 and 150 characters.
+- Question content must contain between 20 and 5,000 characters.
+- Answer content must contain between 10 and 2,000 characters.
 - Vote types must be `up` or `down`.
-- Receiver or user identifiers must be valid for their relevant endpoints.
+- Identifiers and other request fields must satisfy their applicable validation rules.
 
-The application uses centralized error-handling and not-found middleware to return appropriate HTTP status codes.
+The application uses middleware for request validation, authentication, authorization, handling unknown routes, and centralized error handling.
 
-Common status codes include:
+### Common HTTP Status Codes
 
-- `200 OK` — Request succeeded.
-- `201 Created` — Resource created.
-- `400 Bad Request` — Invalid input.
-- `401 Unauthorized` — Authentication required or invalid.
-- `403 Forbidden` — Insufficient permissions.
-- `404 Not Found` — Resource or route not found.
-- `409 Conflict` — Duplicate resource or conflicting operation.
-- `500 Internal Server Error` — Unexpected server error.
+| Status Code | Meaning |
+|---|---|
+| `200 OK` | Request completed successfully |
+| `201 Created` | Resource created successfully |
+| `400 Bad Request` | Request contains invalid input |
+| `401 Unauthorized` | Authentication is missing or invalid |
+| `403 Forbidden` | User lacks the required permission |
+| `404 Not Found` | Requested resource or route was not found |
+| `409 Conflict` | Duplicate data or conflicting operation |
+| `500 Internal Server Error` | Unexpected server-side error |
 
-## 9. Security Features
+## 10. Security Features
 
-- Password hashing using bcrypt.
+The application incorporates the following security measures:
+
+- Password hashing with bcrypt.
 - JWT-based authentication.
 - Role-based authorization.
-- Request validation.
-- Prevention of duplicate votes.
-- Ownership checks for questions and answers.
-- Server-side token revocation on logout.
+- Request validation with express-validator.
+- Database constraints to help prevent duplicate votes.
+- Ownership checks for supported question and answer operations.
+- Server-side token revocation during logout.
 - Soft deletion for supported resources.
 - Environment variables for sensitive configuration.
-- `.gitignore` excludes `.env` and `node_modules`.
+- A `.gitignore` file intended to exclude `.env` and `node_modules`.
 
-## 10. Testing
+Sensitive credentials and private configuration must not be uploaded to the public repository.
 
-API endpoints can be tested with Postman.
+## 11. Testing with Postman
 
-1. Start the Node.js server.
-2. Send requests to `http://localhost:3000`.
-3. Register and verify a user.
-4. Log in and copy the JWT.
-5. Use Bearer Token authorization for protected requests.
-6. Test successful requests, invalid inputs, unauthorized access, and missing resources.
+The API can be tested using Postman.
 
-## 11. Health Check
+Recommended testing sequence:
 
-Send a GET request to:
+1. Start the database service.
+2. Start the Node.js application.
+3. Send a GET request to `/api/health` to check whether the API is responding.
+4. Register a user through `/api/auth/register`.
+5. Verify the user's email address.
+6. Log in through `/api/auth/login` and copy the returned JWT.
+7. Use the token as a Bearer Token when testing protected endpoints.
+8. Create or retrieve categories as needed.
+9. Create questions and add answers.
+10. Test voting, updating, and deletion operations.
+11. Test invalid inputs and requests made without the required permissions.
+12. Test administrative endpoints using an account with the `ADMIN` role.
+
+For protected endpoints, configure Postman's Authorization tab to use **Bearer Token** and enter the JWT.
+
+A revoked token should no longer authorize requests to protected endpoints.
+
+## 12. Health Check
+
+The application provides a health-check endpoint:
 
 ```http
 GET /api/health
 ```
 
-This endpoint can be used to check whether the API server is responding.
+Full URL:
+
+`http://localhost:3000/api/health`
+
+This endpoint can be used to confirm that the API is responding and to check the database connection as implemented by the application.
+
+## 13. Running the Project
+
+After completing the installation and configuration steps, run:
+
+```bash
+node src/app.js
+```
+
+Keep the terminal open while testing the API. If the server fails to start, check that the database service is running, the `.env` file is correctly configured, the required dependencies are installed, and the configured port is available.
+
+## 14. Conclusion
+
+The Community Q&A Platform API demonstrates the implementation of a backend application using Node.js, Express.js, and a relational database. It incorporates RESTful endpoints, CRUD operations, authentication, authorization, email verification, password recovery, validation, relational database constraints, and administrative features.
+
+The project provides a foundation for a community-driven question-and-answer application in which users can interact with questions, answers, categories, and votes through a structured API.
